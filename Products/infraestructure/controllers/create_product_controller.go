@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-
 	aplication "proyecto_hex/Products/application"
 	"proyecto_hex/Products/domain"
 	"proyecto_hex/Products/infraestructure"

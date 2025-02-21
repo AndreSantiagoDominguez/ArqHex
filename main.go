@@ -1,17 +1,26 @@
 package main
 
 import (
-	"proyecto_hex/Products/infraestructure"
-	"proyecto_hex/Products/infraestructure/routes"
+	productInfra "proyecto_hex/Products/infraestructure"
+	productRoutes "proyecto_hex/Products/infraestructure/routes"
+
+	userInfra "proyecto_hex/Users/infraestructure"
+	userRoutes "proyecto_hex/Users/infraestructure/routes"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	infraestructure.GoMySQL()
+	// Inicializar MySQL para Products y Users
+	productInfra.GoMySQL() 
+	userInfra.GoMySQL() 
+
 	r := gin.Default()
 
-	routes.RegisterRoutes(r)
+	productRoutes.RegisterRoutes(r)
+	userRoutes.RegisterUserRoutes(r)
+	
+	
 
-	r.Run() 
+	r.Run(":8800")
 }

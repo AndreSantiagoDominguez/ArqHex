@@ -26,7 +26,7 @@ func GetDBPool() *Conn_MySQL {
 	// Obtener las variables
 	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASSWORD")
+	dbPass := os.Getenv("DB_PASS")
 	dbSchema := os.Getenv("DB_SCHEMA")
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", dbUser, dbPass, dbHost, dbSchema)

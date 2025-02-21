@@ -33,7 +33,7 @@ func (gp_c *GetAllProductsController) GetAllProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": true,
 		"links": gin.H{
-			"self": "http://localhost:8080/products/",
+			"self": "http://localhost:8800/products/",
 		},
 		"data": res,
 	})

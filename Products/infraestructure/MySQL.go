@@ -10,16 +10,11 @@ type MySQL struct {
 	conn *core.Conn_MySQL
 }
 
-// Edit implements domain.Iproduct.
-func (mysql *MySQL) Edit(Product *domain.Product, id int64) (uint, error) {
-	panic("unimplemented")
-}
-
 func NewMySQL() *MySQL {
 	conn := core.GetDBPool()
 
 	if conn.Err != "" {
-		fmt.Println("Error al configurar el pool de conexiones: %v", conn.Err)
+		fmt.Println("Error al configurar el pool de conexiones:", conn.Err)
 	}
 
 	return &MySQL{conn: conn}
@@ -67,6 +62,7 @@ func (mysql *MySQL) EditProduct(id int, product domain.Product) (uint, error) {
 	query := "UPDATE productos SET name = ?, price = ? WHERE id = ?"
 
 	res, err := mysql.conn.ExecutePreparedQuery(query, product.Name, product.Price, id)
+
 	if err != nil {
 		return 0, err
 	}
