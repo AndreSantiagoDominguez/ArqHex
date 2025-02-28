@@ -14,5 +14,10 @@ func RegisterRoutes(r *gin.Engine) {
 		products.PUT("/:id", controllers.NewEditProductController().EditProduct)
 		products.DELETE("/:id", controllers.NewDeleteProductController().DeleteProduct)
 
+		// Short Polling - Devuelve los datos cada 15s
+		products.GET("/short-polling", controllers.ShortPollingProducts)
+
+		// Long Polling - Mantiene la conexión abierta hasta detectar cambios
+		products.GET("/long-polling", controllers.LongPollingProducts)
 	}
 }
