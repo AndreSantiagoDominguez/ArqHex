@@ -1,9 +1,9 @@
 package controllers
 
 import (
-
+	"fmt"
 	aplication "proyecto_hex/Users/application"
-			   "proyecto_hex/Users/infraestructure"
+	"proyecto_hex/Users/infraestructure"
 
 	"net/http"
 	"reflect"
@@ -14,19 +14,20 @@ import (
 
 // ShortPollingUsers responde de forma inmediata con el estado actual de los usuarios cada cierto intervalo de tiempo.
 func ShortPollingUsers(c *gin.Context) {
-	mysql := infraestructure.GetMySQL()
-	useCase := aplication.NewGetAllUsers(mysql)
+    mysql := infraestructure.GetMySQL()
+    useCase := aplication.NewGetAllUsers(mysql)
 
-	ticker := time.NewTicker(15 * time.Second)
-	defer ticker.Stop()
+    // Obtener los usuarios actuales
+    usersData := useCase.Execute()
 
-	for range ticker.C {
-		usersData := useCase.Execute()
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Datos actuales de usuarios",
-			"users":   usersData,
-		})
-	}
+    // Imprimir en consola si hay cambios
+    fmt.Println("🔄 Short Polling - Se consultaron los usuarios:", usersData)
+
+    // Enviar respuesta al cliente
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Datos actuales de usuarios",
+        "users":   usersData,
+    })
 }
 
 // LongPollingUsers mantiene la conexión abierta hasta detectar cambios en los atributos de los usuarios.
@@ -47,7 +48,7 @@ func LongPollingUsers(c *gin.Context) {
 			return
 		case <-ticker.C:
 			updatedUsers := useCase.Execute()
-			// Se usa reflect.DeepEqual para comparar si hubo cambios en los datos de los usuarios.
+			
 			if !reflect.DeepEqual(initialUsers, updatedUsers) {
 				c.JSON(http.StatusOK, gin.H{
 					"message": "Se detectaron cambios en los usuarios",

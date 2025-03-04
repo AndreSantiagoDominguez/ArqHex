@@ -1,9 +1,10 @@
 package controllers
 
 import (
-
+	"fmt"
+	"io"
 	aplication "proyecto_hex/Products/application"
-			   "proyecto_hex/Products/infraestructure"
+	"proyecto_hex/Products/infraestructure"
 
 	"net/http"
 	"reflect"
@@ -12,49 +13,55 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ShortPollingProducts responde de forma inmediata con el estado actual de los productos cada cierto intervalo de tiempo.
+// Short Polling - Responde con el estado actual, el cliente debe hacer las peticiones periódicas.
 func ShortPollingProducts(c *gin.Context) {
 	mysql := infraestructure.GetMySQL()
 	useCase := aplication.NewGetAllProducts(mysql)
 
-	ticker := time.NewTicker(15 * time.Second)
-	defer ticker.Stop()
+	productsData := useCase.Execute()
 
-	for range ticker.C {
-		productsData := useCase.Execute()
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Datos actuales de productos",
-			"products": productsData,
-		})
-	}
+	fmt.Println("Short Polling - Productos consultados:", productsData)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Datos actuales de productos",
+		"products": productsData,
+	})
 }
 
-// LongPollingProducts mantiene la conexión abierta hasta detectar cambios en los atributos de los productos.
+//  Long Polling - Mantiene la conexión abierta hasta detectar cambios o hasta timeout.
 func LongPollingProducts(c *gin.Context) {
 	mysql := infraestructure.GetMySQL()
 	useCase := aplication.NewGetAllProducts(mysql)
 
+	//  Máximo tiempo de espera 30s
 	timeout := time.After(30 * time.Second)
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(2 * time.Second) // Consulta cada 2s
 	defer ticker.Stop()
 
 	initialProducts := useCase.Execute()
+	fmt.Println(" Long Polling - Esperando cambios en los productos...")
 
-	for {
-		select {
-		case <-timeout:
-			c.JSON(http.StatusRequestTimeout, gin.H{"message": "No se detectaron cambios"})
-			return
-		case <-ticker.C:
-			updatedProducts := useCase.Execute()
-			// Se usa reflect.DeepEqual para comparar si hubo cambios en los datos de los productos.
-			if !reflect.DeepEqual(initialProducts, updatedProducts) {
-				c.JSON(http.StatusOK, gin.H{
-					"message": "Se detectaron cambios en los productos",
-					"products": updatedProducts,
-				})
-				return
+	// Habilitar streaming para mantener la conexión abierta
+	c.Stream(func(w io.Writer) bool {
+		for {
+			select {
+			case <-timeout:
+				fmt.Println(" Long Polling - Tiempo de espera agotado, sin cambios detectados.")
+				c.JSON(http.StatusRequestTimeout, gin.H{"message": "No se detectaron cambios"})
+				return false
+			case <-ticker.C:
+				updatedProducts := useCase.Execute()
+
+				if !reflect.DeepEqual(initialProducts, updatedProducts) {
+					fmt.Println("Long Polling - Cambio detectado en los productos:", updatedProducts)
+					c.SSEvent("update", gin.H{
+						"message":  "Se detectaron cambios en los productos",
+						"products": updatedProducts,
+					})
+					c.Writer.Flush() // Mantiene la conexión abierta
+					return false
+				}
 			}
 		}
-	}
+	})
 }
