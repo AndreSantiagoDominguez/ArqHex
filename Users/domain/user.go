@@ -6,16 +6,17 @@ type User struct {
     LastName    string `json:"last_name"`
     Age         int    `json:"age"`
     PhoneNumber string `json:"phone_number"`
+	Balance 	int    `json:"balance"`
 }
 
-// NewUser es el constructor para crear un nuevo usuario.
-func NewUser(firstName string, lastName string, age int, phoneNumber string) *User {
+func NewUser(firstName string, lastName string, age int, phoneNumber string, balance int) *User {
 	return &User{
 		Id:          0,
 		FirstName:   firstName,
 		LastName:    lastName,
 		Age:         age,
 		PhoneNumber: phoneNumber,
+		Balance:   	 balance,
 	}
 }
 
@@ -49,4 +50,12 @@ func (u *User) GetPhoneNumber() string {
 
 func (u *User) SetPhoneNumber(phoneNumber string) {
 	u.PhoneNumber = phoneNumber
+}
+
+func (u *User) GetBalance() int {
+	return u.Balance
+}
+
+func (u *User) SetBalance(balance int) {
+	u.Balance = balance
 }
